@@ -1,17 +1,16 @@
-'use strict';
-var hasGulplog = require('has-gulplog');
-var micromatch = require('micromatch');
-var unique = require('array-unique');
-var findup = require('findup-sync');
-var resolve = require('resolve');
-var path = require('path');
+const hasGulplog = require('has-gulplog');
+const micromatch = require('micromatch');
+const unique = require('array-unique');
+const findup = require('findup-sync');
+const resolve = require('resolve');
+const path = require('path');
 
 function arrayify(el) {
   return Array.isArray(el) ? el : [el];
 }
 
 function camelize(str) {
-  return str.replace(/-(\w)/g, function(m, p1) {
+  return str.replace(/-(\w)/g, function (m, p1) {
     return p1.toUpperCase();
   });
 }
@@ -40,7 +39,7 @@ function getPattern(options) {
   return defaultPatterns.concat(arrayify(options.pattern));
 }
 
-module.exports = function(options) {
+module.exports = function (options) {
   var finalObject = {};
   var configObject;
   var requireFn;
@@ -48,7 +47,9 @@ module.exports = function(options) {
 
   var DEBUG = options.DEBUG || false;
   var pattern = getPattern(options);
-  var config = options.config || findup('package.json', { cwd: parentDir });
+  var config = options.config || findup('package.json', {
+    cwd: parentDir
+  });
   var scope = arrayify(options.scope || ['dependencies', 'devDependencies', 'peerDependencies']);
   var replaceString = options.replaceString || /^gulp(-|\.)/;
   var camelizePluginName = options.camelize !== false;
@@ -58,7 +59,7 @@ module.exports = function(options) {
 
   logDebug('Debug enabled with options: ' + JSON.stringify(options));
 
-  var renameFn = options.renameFn || function(name) {
+  var renameFn = options.renameFn || function (name) {
     name = name.replace(replaceString, '');
     return camelizePluginName ? camelize(name) : name;
   };
@@ -68,10 +69,12 @@ module.exports = function(options) {
   if (typeof options.requireFn === 'function') {
     requireFn = options.requireFn;
   } else if (typeof config === 'string') {
-    requireFn = function(name) {
+    requireFn = function (name) {
       // This searches up from the specified package.json file, making sure
       // the config option behaves as expected. See issue #56.
-      var src = resolve.sync(name, { basedir: path.dirname(config) });
+      var src = resolve.sync(name, {
+        basedir: path.dirname(config)
+      });
       return require(src);
     };
   } else {
@@ -84,7 +87,7 @@ module.exports = function(options) {
     throw new Error('Could not find dependencies. Do you have a package.json file in your project?');
   }
 
-  var names = scope.reduce(function(result, prop) {
+  var names = scope.reduce(function (result, prop) {
     return result.concat(Object.keys(configObject[prop] || {}));
   }, []);
 
@@ -102,9 +105,9 @@ module.exports = function(options) {
     var err;
     if (object[requireName]) {
       logDebug('error: defineProperty ' + name);
-      err = maintainScope
-        ? 'Could not define the property "' + requireName + '", you may have repeated dependencies in your package.json like' + ' "gulp-' + requireName + '" and ' + '"' + requireName + '"'
-        : 'Could not define the property "' + requireName + '", you may have repeated a dependency in another scope like' + ' "gulp-' + requireName + '" and ' + '"@foo/gulp-' + requireName + '"';
+      err = maintainScope ?
+        'Could not define the property "' + requireName + '", you may have repeated dependencies in your package.json like' + ' "gulp-' + requireName + '" and ' + '"' + requireName + '"' :
+        'Could not define the property "' + requireName + '", you may have repeated a dependency in another scope like' + ' "gulp-' + requireName + '" and ' + '"@foo/gulp-' + requireName + '"';
       throw new Error(err);
     }
 
@@ -112,7 +115,7 @@ module.exports = function(options) {
       logDebug('lazyload: adding property ' + requireName);
       Object.defineProperty(object, requireName, {
         enumerable: true,
-        get: function() {
+        get: function () {
           logDebug('lazyload: requiring ' + name + '...');
           return transform(requireName, requireFn(name));
         }
@@ -151,7 +154,7 @@ module.exports = function(options) {
   var scopeTest = new RegExp('^@');
   var scopeDecomposition = new RegExp('^@(.+)/(.+)');
 
-  unique(micromatch(names, pattern)).forEach(function(name) {
+  unique(micromatch(names, pattern)).forEach(function (name) {
     var decomposition;
     var fObject = finalObject;
     if (scopeTest.test(name)) {
